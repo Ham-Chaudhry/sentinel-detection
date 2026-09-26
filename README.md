@@ -38,7 +38,7 @@ AuditLogs
 ```
 
 Entities mapped: `Target` and `Actor`, both as Account.
-
+![Rule 1 results](query-role-assignment.png)
 **Result:** Caught a User Administrator assignment and correctly pulled out who did it and who received it.
 
 **False positives:** This fires on every normal onboarding and every helpdesk role grant. To be useful in production it needs an allowlist for the accounts that do provisioning, or it should only watch high-value roles like Global Administrator instead of all roles.
@@ -71,7 +71,7 @@ AuditLogs
 This one builds a list of role grants, builds a list of account creations, matches them on the account name, and keeps any pair that happened within an hour of each other.
 
 Entity mapped: `Target` as Account.
-
+![Rule 2 results](query-rapid-escalation.png)
 **Result:** Caught the test account being created and given User Administrator 24 seconds later.
 
 **Something the test data showed me:** The time gap came back as `0` minutes. 24 seconds rounds down to zero, which means minutes are too coarse a unit for the thing I'm actually hunting. The fix is to measure in seconds and alert on anything under 300.
@@ -100,15 +100,15 @@ AuditLogs
 ```
 
 Entities mapped: `Target` and `Actor`, both as Account.
-
+![Rule 3 results](query-password-reset.png)
 **Result:** Caught the password operation on the account that had been elevated earlier.
 
 **Weakness in this one:** I build the list of privileged accounts from the audit log itself. That only includes accounts that got elevated while logging was turned on. Anyone who was already an admin before that is invisible to this rule. In a real environment you would pull that list from the directory or from a Sentinel watchlist instead.
 
 ---
-
+![Analytics rules](analytics-rules.png)
 ## Tuning: 17 incidents from 3 events
-
+![Incident queue](incidents-queue.png)
 Within an hour of turning the rules on, the queue had 17 incidents. There were only 3 real events behind them.
 
 The problem was the schedule. I set each rule to run every 5 minutes but look back 1 hour. So every run re-read the same events and opened a brand new incident for something it had already alerted on. Same three events, twelve times over.
