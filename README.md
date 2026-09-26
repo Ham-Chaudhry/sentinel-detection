@@ -19,7 +19,7 @@ I built this to get hands-on SIEM experience: setting up a data connector, writi
 I did not use sign-in logs. Exporting them requires an Entra ID P1 or P2 license, so all three rules are built on audit logs only, which are free. That is a real constraint a lot of smaller organizations run into.
 
 The test case for all three rules is one sequence of audit events: an account created, given an admin role 24 seconds later, and deleted 25 seconds after that.
-
+![Audit events](audit-events-sequence.png)
 ---
 
 ## Rule 1: Privileged Role Assignment
