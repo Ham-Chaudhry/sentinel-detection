@@ -1,0 +1,20 @@
+// New Account Rapid Privilege Escalation
+// Tactic: Persistence | Technique: T1136 - Create Account
+// Severity: High | Cadence: every 5 min
+// Entity mapping: Account(FullName) -> Target
+// Note: minute granularity is too coarse; prefer datetime_diff('second', ...) < 300
+
+let roleGrants = AuditLogs
+| where OperationName has "Add member to role"
+| extend Target = tostring(TargetResources[0].userPrincipalName)
+| extend RoleName = tostring(TargetResources[0].modifiedProperties[1].newValue)
+| project GrantTime = TimeGenerated, Target, RoleName;
+AuditLogs
+| where OperationName has "Add user"
+| extend Target = tostring(TargetResources[0].userPrincipalName)
+| project CreateTime = TimeGenerated, Target
+| join kind=inner roleGrants on Target
+| extend MinutesToEscalation = datetime_diff('minute', GrantTime, CreateTime)
+| where MinutesToEscalation between (0 .. 60)
+| extend TimeGenerated = GrantTime
+| project TimeGenerated, CreateTime, GrantTime, MinutesToEscalation, Target, RoleName

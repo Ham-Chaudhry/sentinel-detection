@@ -1,0 +1,11 @@
+// Privileged Role Assignment
+// Tactic: Privilege Escalation | Technique: T1098 - Account Manipulation
+// Severity: Medium | Cadence: every 5 min
+// Entity mapping: Account(FullName) -> Target, Account(FullName) -> Actor
+
+AuditLogs
+| where OperationName has "Add member to role"
+| extend Actor = tostring(InitiatedBy.user.userPrincipalName)
+| extend Target = tostring(TargetResources[0].userPrincipalName)
+| extend RoleName = tostring(TargetResources[0].modifiedProperties[1].newValue)
+| project TimeGenerated, OperationName, Actor, Target, RoleName, Result
